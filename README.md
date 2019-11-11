@@ -5,7 +5,7 @@ This crate provides global variables for Rust. It is ugly,
 awkward to use, and quite inefficient, but it does seem to
 work.
 
-Rustdoc is available. An [example](examples/demo.md) is
+Rustdoc is available. An [example](examples/demo.rs) is
 provided.
 
 This code is made available under the "MIT License". Please
