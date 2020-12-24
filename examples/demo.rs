@@ -1,6 +1,6 @@
 use ugly_global::*;
 
-global_vars! {
+global_vars! { sync,
     GLOBAL_S: S;
 }
 
