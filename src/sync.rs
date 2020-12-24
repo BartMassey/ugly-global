@@ -12,6 +12,12 @@ pub type Global<T> = OnceCell<Mutex<RefCell<T>>>;
 /// reference to a global.
 pub type GlobalGuard<T> = MutexGuard<'static, RefCell<T>>;
 
+/// Global `OnceCell` function --- used to get a new
+/// `OnceCell` with `once_cell` in scope.
+pub const fn new_once_cell<T>() -> OnceCell<T> {
+    once_cell::sync::OnceCell::new()
+}
+
 /// Declare mutable global variables. Use uppercase
 /// variable names to avoid compiler warnings.
 ///
@@ -28,7 +34,7 @@ pub type GlobalGuard<T> = MutexGuard<'static, RefCell<T>>;
 macro_rules! global_vars {
     ($($x:ident : $t:ty ;)*) => {
         $(static $x: $crate::sync::Global<$t> =
-            once_cell::sync::OnceCell::new();)*
+            $crate::sync::new_once_cell();)*
     };
 }
 
