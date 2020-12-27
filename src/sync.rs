@@ -1,28 +1,10 @@
 //! Mutable sync global variables --- may be used across threads.
 
 use std::sync::{Mutex, MutexGuard};
-use std::ops::{Deref, DerefMut};
 use once_cell::sync::OnceCell;
 
-type MutexGuardSync<T> = MutexGuard<'static, T>;
-
-/// Global "guard" type --- used to get a mutable
-/// reference to a global.
-pub struct GlobalGuard<T: 'static>(MutexGuardSync<T>);
-
-impl<T: 'static> Deref for GlobalGuard<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        self.0.deref()
-    }
-}
-
-impl<T: 'static> DerefMut for GlobalGuard<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.0.deref_mut()
-    }
-}
+// Type of guard usable by synchronous programs.
+type Guard<T> = MutexGuard<'static, T>;
 
 /// Global type.
 pub struct Global<T>(OnceCell<Mutex<T>>);
@@ -42,13 +24,12 @@ impl<T: 'static> Global<T> {
     /// Will panic if the global has not yet been initialized.
     /// Will panic if the underlying mutex gets poisoned (should
     /// not happen).
-    pub fn fetch(&'static self) -> GlobalGuard<T> {
-        let guard = self.0
+    pub fn fetch(&'static self) -> Guard<T> {
+        self.0
             .get()
             .expect("global uninitialized")
             .lock()
-            .expect("global lock poisoned");
-        GlobalGuard(guard)
+            .expect("global lock poisoned")
     }
 
 
