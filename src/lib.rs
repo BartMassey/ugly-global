@@ -57,7 +57,7 @@ macro_rules! global_vars {
 #[macro_export]
 macro_rules! fetch {
     ($y:ident = $x:ident) => {
-        let $y = $x.fetch();
+        let mut $y = $x.fetch();
     };
 }
 
