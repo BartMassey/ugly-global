@@ -19,8 +19,8 @@ fn demo() {
 
 fn main() {
     init!(GLOBAL_S = S { x: 0, y: 0 });
-    demo();
-    demo();
     let t = std::thread::spawn(|| demo());
+    demo();
+    demo();
     t.join().unwrap();
 }
