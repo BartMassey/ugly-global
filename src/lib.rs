@@ -114,7 +114,7 @@ impl<T: 'static> Global<T> {
     /// Will panic if the global has not yet been initialized.
     /// Will panic if the underlying mutex gets poisoned (should
     /// not happen).
-    pub fn fetch(&'static self) -> MutexGuard<'static, T> {
+    pub fn fetch(&self) -> MutexGuard<'_, T> {
         self.0
             .get()
             .expect("global uninitialized")
