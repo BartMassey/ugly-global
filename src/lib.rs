@@ -2,11 +2,14 @@
 //! this crate. Really slow and gross, but better than
 //! nothing.
 //!
-//! Currently only sync and unsync global variables are
+//! Currently only thread-safe sync global variables are
 //! provided.  Future enhancements may include thread_local
-//! variables.
+//! variables, if the `std` ones are ever upgraded to have a
+//! guard type instead of just being usable in a closure.
 
-pub mod sync;
+use std::sync::{Mutex, MutexGuard};
+
+use once_cell::sync::OnceCell;
 
 /// Declare mutable global variables. Use uppercase
 /// variable names to avoid compiler warnings.
@@ -22,9 +25,9 @@ pub mod sync;
 /// ```
 #[macro_export]
 macro_rules! global_vars {
-    ($module:ident, $($x:ident : $t:ty ;)*) => {
-        $(static $x: $crate::$module::Global<$t> =
-            $crate::$module::Global::new();)*
+    ($($x:ident : $t:ty ;)*) => {
+        $(static $x: $crate::Global<$t> =
+            $crate::Global::new();)*
     };
 }
 
@@ -91,4 +94,44 @@ macro_rules! init {
     ($x:ident = $v:expr) => {
         $x.init($v)
     };
+}
+
+/// Global type.
+pub struct Global<T>(OnceCell<Mutex<T>>);
+
+impl<T: 'static> Global<T> {
+    /// Global `OnceCell` function --- used to get a new
+    /// `OnceCell` with `once_cell` in scope.
+    pub const fn new() -> Self {
+        Global(OnceCell::new())
+    }
+
+    /// Lock a global and acquire the object used to access it. See
+    /// `fetch!()` for the macro normally used here.
+    ///
+    /// # Panics
+    ///
+    /// Will panic if the global has not yet been initialized.
+    /// Will panic if the underlying mutex gets poisoned (should
+    /// not happen).
+    pub fn fetch(&'static self) -> MutexGuard<'static, T> {
+        self.0
+            .get()
+            .expect("global uninitialized")
+            .lock()
+            .expect("global lock poisoned")
+    }
+
+    /// Initialize a global reference to contain an initial
+    /// value.  See `init!()` for the macro normally used here.
+    ///
+    /// # Panics
+    ///
+    /// Will panic on initialization failure; for example on an attempt
+    /// to reinitialize a variable.
+    pub fn init(&self, v: T) {
+        if self.0.set(Mutex::new(v)).is_err() {
+            panic!("initialization failed");
+        }
+    }
 }

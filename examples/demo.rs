@@ -1,6 +1,6 @@
 use ugly_global::*;
 
-global_vars! { sync,
+global_vars! {
     GLOBAL_S: S;
 }
 
@@ -19,6 +19,8 @@ fn demo() {
 
 fn main() {
     init!(GLOBAL_S = S { x: 0, y: 0 });
+    let t = std::thread::spawn(|| demo());
     demo();
     demo();
+    t.join().unwrap();
 }
